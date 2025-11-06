@@ -1,5 +1,5 @@
 # Documentation and Markdown files
-*.md
+
 
 # Dependencies
 node_modules/
