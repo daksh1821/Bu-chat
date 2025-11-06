@@ -230,10 +230,3 @@ npm run build
 4. Push to branch (`git push origin feature/name`)
 5. Open Pull Request
 
-## License
-
-MIT License - See LICENSE file for details
-
-## Contact
-
-For questions or support, please open an issue in the repository.
