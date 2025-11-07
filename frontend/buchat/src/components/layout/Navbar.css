@@ -14,7 +14,8 @@
 }
 
 [data-theme="dark"] .glass-nav {
-  background: rgba(26, 26, 27, 0.8);
+  background: rgba(18, 18, 18, 0.8); /* Darker background like image */
+  border-bottom: 1px solid var(--border);
 }
 
 .navbar-container {
@@ -30,6 +31,8 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  /* Make sure left side doesn't shrink */
+  flex-shrink: 0;
 }
 
 .menu-button {
@@ -60,7 +63,7 @@
   width: 36px;
   height: 36px;
   background: linear-gradient(135deg, #ff4500, #ff6b35);
-  border-radius: 10px;
+  border-radius: 50%; /* Changed to circle like Reddit logo */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,6 +80,7 @@
 .navbar-search {
   flex: 1;
   max-width: 600px;
+  min-width: 100px; /* Allow search to shrink a bit */
   position: relative;
 }
 
@@ -84,12 +88,17 @@
   width: 100%;
   padding: 0.625rem 1rem 0.625rem 2.75rem;
   background: var(--surface-hover);
-  border: 1px solid transparent;
+  border: 1px solid var(--border); /* Slightly visible border */
   border-radius: 24px;
   color: var(--text-primary);
   font-size: 0.875rem;
   outline: none;
   transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .search-input {
+  background: #27272a; /* Darker search bg */
+  border-color: #3f3f46;
 }
 
 .search-input::placeholder {
@@ -98,13 +107,18 @@
 
 .search-input:focus {
   background: var(--surface);
-  border-color: var(--border);
-  box-shadow: 0 0 0 3px rgba(0, 121, 211, 0.1);
+  border-color: var(--primary); /* Use primary color for focus */
+  box-shadow: 0 0 0 3px var(--primary-shadow);
+}
+
+[data-theme="dark"] .search-input:focus {
+  background: #121212;
+  border-color: var(--primary);
 }
 
 .search-icon {
   position: absolute;
-  left: 0.75rem;
+  left: 1rem; /* Adjusted padding */
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
@@ -113,7 +127,9 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.5rem; /* Reduced gap to fit more icons */
+  /* Make sure right side doesn't shrink */
+  flex-shrink: 0;
 }
 
 .nav-icon-button {
@@ -126,7 +142,7 @@
   background: transparent;
   border: none;
   border-radius: 10px;
-  color: var(--text-primary);
+  color: var(--text-secondary); /* Lighter icon color */
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
@@ -134,8 +150,40 @@
 
 .nav-icon-button:hover {
   background: var(--surface-hover);
+  color: var(--text-primary); /* Darker on hover */
   transform: scale(1.05);
 }
+
+/* New button style for "Create" */
+.nav-create-button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 24px;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.nav-create-button:hover {
+  background: var(--surface-active);
+  border-color: var(--border-light);
+}
+
+[data-theme="dark"] .nav-create-button {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
+[data-theme="dark"] .nav-create-button:hover {
+  background: #3f3f46;
+}
+
 
 .notification-badge {
   position: absolute;
@@ -151,13 +199,14 @@
 
 .user-menu-container {
   position: relative;
+  margin-left: 0.5rem; /* Add some space before user menu */
 }
 
 .user-avatar-button {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px; /* Squared like image */
+  border: 1px solid var(--border);
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   cursor: pointer;
   overflow: hidden;
@@ -165,7 +214,7 @@
 }
 
 .user-avatar-button:hover {
-  border-color: rgba(255, 255, 255, 0.6);
+  border-color: var(--primary);
   transform: scale(1.05);
 }
 
@@ -194,9 +243,10 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: 12px;
-  min-width: 200px;
+  min-width: 220px; /* Wider dropdown */
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  z-index: 101; /* Ensure dropdown is on top */
 }
 
 .dropdown-item {
@@ -227,19 +277,24 @@
 
 .mobile-menu-button {
   display: none;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
   border: none;
   border-radius: 8px;
   padding: 0.5rem;
-  color: white;
+  color: var(--text-primary);
   cursor: pointer;
 }
 
 .mobile-menu {
   display: none;
-  background: rgba(20, 20, 40, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
   padding: 1rem;
+  position: absolute;
+  top: 56px; /* Position below navbar */
+  left: 0;
+  right: 0;
+  box-shadow: var(--shadow-md);
 }
 
 .mobile-menu-item {
@@ -247,7 +302,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  color: white;
+  color: var(--text-primary);
   text-decoration: none;
   background: transparent;
   border: none;
@@ -260,7 +315,7 @@
 }
 
 .mobile-menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-hover);
 }
 
 @media (max-width: 768px) {
@@ -274,11 +329,18 @@
   }
 
   .navbar-search {
+    display: none; /* Hide search bar on tablets */
+  }
+
+  /* Hide the new desktop icons on mobile */
+  .nav-icon-button:not(.theme-toggle),
+  .nav-create-button {
     display: none;
   }
 
-  .nav-icon-button:not(.theme-toggle) {
-    display: none;
+  /* Show theme toggle if user is not authenticated */
+  .navbar-right > .theme-toggle {
+    display: flex;
   }
 
   .user-avatar-button {
@@ -301,6 +363,10 @@
   }
 
   .brand-text {
-    display: none;
+    display: none; /* Hide brand text on small phones */
+  }
+
+  .menu-button {
+    padding: 0.25rem;
   }
 }

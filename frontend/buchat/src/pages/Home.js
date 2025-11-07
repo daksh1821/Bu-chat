@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Filter, TrendingUp, Clock, BarChart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import PostCard from '../components/posts/PostCard';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -16,6 +17,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('hot');
   const [lastKey, setLastKey] = useState(null);
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     fetchPosts();
@@ -45,6 +47,11 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching communities:', error);
     }
+  };
+
+  // --- NEW: Handler to navigate to post detail ---
+  const handlePostClick = (postId) => {
+    navigate(`/post/${postId}`);
   };
 
   const sortOptions = [
@@ -91,7 +98,12 @@ const Home = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  <PostCard post={post} onVote={fetchPosts} />
+                  {/* --- UPDATED: Pass the new onPostClick handler --- */}
+                  <PostCard 
+                    post={post} 
+                    onVote={fetchPosts} 
+                    onPostClick={handlePostClick} // Pass handler
+                  />
                 </motion.div>
               ))}
             </motion.div>

@@ -15,19 +15,16 @@ const PostMedia = ({ media, postType, nsfw, spoiler, postId, onView }) => {
   const videoRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
 
-  if (!media || media.length === 0) return null;
-
-  const currentMedia = media[currentIndex];
-  const hasMultiple = media.length > 1;
-
-  // Track view when media is displayed
   useEffect(() => {
     if (onView && !showSpoiler && !showNSFW) {
       onView(postId, currentIndex);
     }
   }, [currentIndex, showSpoiler, showNSFW]);
 
-  // Handle hover-to-play for videos
+  if (!media || media.length === 0) return null;
+
+  const currentMedia = media[currentIndex];
+  const hasMultiple = media.length > 1;
   const handleMouseEnter = () => {
     setIsHovering(true);
     if (currentMedia.type === 'video' && videoRef.current && !isPlaying) {

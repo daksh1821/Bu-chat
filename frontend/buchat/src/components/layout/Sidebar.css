@@ -1,3 +1,30 @@
+/* Variables (Assuming you have these defined elsewhere, if not, replace them) */
+:root {
+  --background-dark: #030303;
+  --text-primary-dark: #d7dadc;
+  --text-secondary-dark: #818384;
+  --hover-dark: #1a1a1b;
+  --active-dark: #272729;
+  --border-dark: #343536;
+  --navbar-height: 56px; /* Adjust if your navbar height is different */
+  --brand-color: #FF4500;
+  
+  /* Assuming light/dark theme variables from your new file */
+  --surface: #ffffff;
+  --surface-hover: #f0f2f5;
+  --surface-active: #e4e6e9;
+  --border: #e0e0e0;
+  --border-light: #e0e0e0;
+  --text-primary: #050505;
+  --text-secondary: #65676b;
+  --text-tertiary: #8a8d91;
+  --primary: #FF4500;
+  --overlay: rgba(0, 0, 0, 0.4);
+}
+
+/* [data-theme="dark"] { ... your dark theme variables ... } */
+
+
 .sidebar-overlay {
   position: fixed;
   top: 56px;
@@ -33,7 +60,7 @@
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  /* gap: 2rem; */ /* <-- Removed this gap to prevent large space */
 }
 
 .sidebar-nav {
@@ -85,6 +112,134 @@
 .sidebar-item.active::before {
   opacity: 1;
 }
+
+/* --- ADDED/MERGED STYLES START HERE --- */
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 1.5rem 0; /* Spacing */
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Matches sidebar-nav gap */
+}
+
+.sidebar-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem; /* Match sidebar-item */
+  font-size: 0.75rem; /* Smaller for header */
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  border-radius: 10px; /* Match sidebar-item */
+  transition: all 0.2s ease;
+}
+
+.sidebar-section-header:hover {
+  background: var(--surface-hover);
+}
+
+.sidebar-section-header .chevron-icon {
+  transition: transform 0.2s ease-out;
+  color: var(--text-secondary);
+}
+
+.sidebar-section-header.open .chevron-icon {
+  transform: rotate(180deg);
+}
+
+.community-list {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Match sidebar-nav gap */
+}
+
+
+/* Style for community items, based on your .sidebar-item */
+.community-item {
+  /* This display: flex is crucial for side-by-side layout */
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.875rem !important; /* Match sidebar-item */
+  
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  margin-bottom: 0.25rem;
+  
+  /* Indent them slightly */
+  padding-left: 1.5rem !important;
+}
+
+.community-item::before {
+  /* Copy the active state style from sidebar-item */
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.community-item:hover {
+  background: var(--surface-hover);
+  transform: translateX(2px);
+}
+
+.community-item.active {
+  background: var(--surface-hover);
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.community-item.active::before {
+  opacity: 1;
+}
+
+.community-icon {
+  /* This ensures the image respects the 24x24 size */
+  /* Using !important to override Search.css and Communities.css */
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.community-icon-placeholder {
+  /* This ensures the placeholder icons are 24x24 */
+  /* Using !important to override Search.css and Communities.css */
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+/* --- FIX ENDS HERE --- */
+
 
 .sidebar-footer {
   margin-top: auto;

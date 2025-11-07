@@ -11,7 +11,8 @@ import { postService } from '../../services/postService';
 import { useAuth } from '../../contexts/AuthContext';
 import './PostCard.css';
 
-const PostCard = ({ post, onVote, onDelete }) => {
+// --- UPDATED: Accepts onPostClick prop ---
+const PostCard = ({ post, onVote, onDelete, onPostClick }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [userVote, setUserVote] = useState(null);
@@ -19,7 +20,20 @@ const PostCard = ({ post, onVote, onDelete }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
-  const handleVote = async (voteType) => {
+  // --- NEW: This function calls the navigation prop ---
+  const handleCardClick = () => {
+    if (onPostClick) {
+      onPostClick(post.postId);
+    }
+  };
+
+  // --- NEW: This stops clicks on buttons/links from triggering the card click ---
+  const handleStopPropagation = (e) => {
+    e.stopPropagation();
+  };
+
+  const handleVote = async (e, voteType) => {
+    handleStopPropagation(e); // Stop click from bubbling
     if (!user) {
       navigate('/login');
       return;
@@ -46,7 +60,8 @@ const PostCard = ({ post, onVote, onDelete }) => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    handleStopPropagation(e); // Stop click from bubbling
     if (!user) {
       navigate('/login');
       return;
@@ -60,7 +75,8 @@ const PostCard = ({ post, onVote, onDelete }) => {
     }
   };
 
-  const handleShare = () => {
+  const handleShare = (e) => {
+    handleStopPropagation(e); // Stop click from bubbling
     if (navigator.share) {
       navigator.share({
         title: post.title,
@@ -77,19 +93,21 @@ const PostCard = ({ post, onVote, onDelete }) => {
     : 'recently';
 
   return (
-    <Card className="post-card" hover={false}>
+    // --- UPDATED: Added onClick to the main card ---
+    <Card className="post-card" hover={false} onClick={handleCardClick}>
       <div className="post-card-content">
-        <div className="post-vote-section">
+        {/* --- UPDATED: Added onClick to stop propagation --- */}
+        <div className="post-vote-section" onClick={handleStopPropagation}>
           <button
             className={`vote-button ${userVote === 1 ? 'active upvote' : ''}`}
-            onClick={() => handleVote(1)}
+            onClick={(e) => handleVote(e, 1)}
           >
             <ArrowUp size={20} />
           </button>
           <span className="vote-count">{localScore}</span>
           <button
             className={`vote-button ${userVote === -1 ? 'active downvote' : ''}`}
-            onClick={() => handleVote(-1)}
+            onClick={(e) => handleVote(e, -1)}
           >
             <ArrowDown size={20} />
           </button>
@@ -97,7 +115,8 @@ const PostCard = ({ post, onVote, onDelete }) => {
 
         <div className="post-main-content">
           <div className="post-header">
-            <div className="post-meta">
+            {/* --- UPDATED: Added onClick to stop propagation --- */}
+            <div className="post-meta" onClick={handleStopPropagation}>
               <Link to={`/c/${post.community}`} className="post-community">
                 c/{post.community}
               </Link>
@@ -111,7 +130,12 @@ const PostCard = ({ post, onVote, onDelete }) => {
             </div>
           </div>
 
-          <Link to={`/post/${post.postId}`} className="post-title-link">
+          {/* --- UPDATED: Added onClick to stop propagation --- */}
+          <Link 
+            to={`/post/${post.postId}`} 
+            className="post-title-link" 
+            onClick={handleStopPropagation}
+          >
             <h3 className="post-title">
               {post.flair && (
                 <span className="post-flair">
@@ -134,17 +158,20 @@ const PostCard = ({ post, onVote, onDelete }) => {
             </p>
           )}
 
+          {/* --- UPDATED: Added onClick to stop propagation --- */}
           {post.media && post.media.length > 0 && (
-            <PostMedia 
-              media={post.media} 
-              postType={post.postType}
-              nsfw={post.nsfw}
-              spoiler={post.spoiler}
-              postId={post.postId}
-              onView={(postId, mediaIndex) => {
-                postService.trackMediaView(postId, user?.userId, mediaIndex);
-              }}
-            />
+            <div onClick={handleStopPropagation}>
+              <PostMedia 
+                media={post.media} 
+                postType={post.postType}
+                nsfw={post.nsfw}
+                spoiler={post.spoiler}
+                postId={post.postId}
+                onView={(postId, mediaIndex) => {
+                  postService.trackMediaView(postId, user?.userId, mediaIndex);
+                }}
+              />
+            </div>
           )}
 
           {post.tags && post.tags.length > 0 && (
@@ -157,7 +184,8 @@ const PostCard = ({ post, onVote, onDelete }) => {
             </div>
           )}
 
-          <div className="post-actions">
+          {/* --- UPDATED: Added onClick to stop propagation --- */}
+          <div className="post-actions" onClick={handleStopPropagation}>
             <Link to={`/post/${post.postId}`} className="post-action-button">
               <MessageCircle size={18} />
               <span>{post.commentCount || 0} Comments</span>
@@ -176,14 +204,18 @@ const PostCard = ({ post, onVote, onDelete }) => {
                 <span>{post.awards}</span>
               </div>
             )}
-            <button className="post-action-button" onClick={() => setShowMenu(!showMenu)}>
+            <button className="post-action-button" onClick={(e) => {
+              handleStopPropagation(e);
+              setShowMenu(!showMenu);
+            }}>
               <MoreHorizontal size={18} />
             </button>
           </div>
         </div>
       </div>
       {showMenu && (
-        <div className="post-menu">
+        // --- UPDATED: Added onClick to stop propagation ---
+        <div className="post-menu" onClick={handleStopPropagation}>
           <button onClick={() => { toast.info('Report feature coming soon'); setShowMenu(false); }}>Report</button>
           <button onClick={() => { toast.info('Hide feature coming soon'); setShowMenu(false); }}>Hide</button>
         </div>

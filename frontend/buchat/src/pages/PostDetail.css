@@ -1,32 +1,121 @@
-.post-detail-page {
-  min-height: 100vh;
-  padding: 1.25rem 0;
+/* * Updated PostDetail.css
+ * - Added 2-column layout for desktop
+ * - Added new styles for vertical voting
+ * - Added styles for the new right-hand community sidebar
+ * - Added dark theme support
+*/
+
+:root {
+  /* Ensure these variables are defined globally */
+  --surface: #ffffff;
+  --surface-hover: #f0f2f5;
+  --surface-active: #e4e6e9;
+  --border: #e0e0e0;
+  --border-light: #e0e0e0;
+  --text-primary: #050505;
+  --text-secondary: #65676b;
+  --text-tertiary: #8a8d91;
+  --primary: #FF4500;
+  --primary-shadow: rgba(255, 69, 0, 0.1);
 }
 
-.post-detail-container {
-  max-width: 900px;
+/* --- New Layout --- */
+.post-detail-page {
+  min-height: 100vh;
+  padding: 1.5rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  /* max-width: 1200px; */ /* Let content decide, or set a max-width */
   margin: 0 auto;
-  padding: 0 1rem;
+}
+
+.post-content-column {
+  flex: 1;
+  max-width: 740px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.post-detail-card {
-  padding: 1.5rem;
+.post-sidebar-column {
+  width: 312px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
+
+/* --- New Post Card Structure --- */
+.post-detail-card {
+  padding: 0; /* Remove padding, content will handle it */
+  display: flex;
+  background-color: var(--surface);
+}
+
+.post-voting {
+  width: 40px;
+  background: var(--surface-hover);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-radius: 12px 0 0 12px; /* Match card radius */
+}
+
+.vote-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.vote-btn:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.vote-btn.upvote:hover {
+  color: var(--primary);
+}
+
+.vote-btn.downvote:hover {
+  color: #007bff; /* Or another color for downvote */
+}
+
+.post-voting span {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  margin: 0.25rem 0;
+}
+
+.post-content {
+  flex: 1;
+  padding: 1rem 1.5rem;
+}
+
+/* --- Original Styles (Adapted) --- */
 
 .post-detail-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   font-size: 0.875rem;
 }
 
 .post-community {
   color: var(--text-primary);
   font-weight: 700;
+  text-decoration: none;
+}
+.post-community:hover {
+  text-decoration: underline;
 }
 
 .post-author {
@@ -34,7 +123,7 @@
 }
 
 .post-detail-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem; /* Slightly smaller */
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 1rem;
@@ -49,55 +138,37 @@
 }
 
 .post-detail-media {
-  margin: 1.5rem 0;
-  border-radius: 16px;
+  margin: 1rem 0;
+  border-radius: 12px; /* Soften corners */
   overflow: hidden;
+  max-height: 700px;
+  display: flex;
+  justify-content: center;
+  background-color: var(--surface-hover);
 }
 
 .post-detail-media img {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
+  max-height: 700px;
   display: block;
 }
 
 .post-detail-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.vote-section {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--surface-hover);
-  border-radius: 20px;
-}
-
-.vote-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  padding: 0.25rem;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.vote-btn:hover {
-  background: var(--border);
-  color: var(--text-primary);
+  flex-wrap: wrap; /* Allow wrapping */
+  gap: 0.5rem; /* Tighter gap */
+  padding-top: 0.5rem;
+  /* Removed border-top, now handled by content padding */
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
   background: transparent;
   border: none;
   border-radius: 20px;
@@ -111,7 +182,12 @@
 .action-btn:hover {
   background: var(--surface-hover);
 }
+.action-btn.comments {
+  /* Make comment button stand out slightly */
+  background: var(--surface-hover);
+}
 
+/* --- Comments Section --- */
 .comments-section {
   padding: 1.5rem;
 }
@@ -127,26 +203,44 @@
   margin-bottom: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+}
+
+.comment-as {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.comment-as a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
 }
 
 .comment-form textarea {
   width: 100%;
   padding: 0.75rem 1rem;
   background: var(--surface);
-  border: 2px solid var(--border-light);
-  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
   color: var(--text-primary);
   font-size: 0.9375rem;
   font-family: inherit;
   resize: vertical;
   outline: none;
   transition: all 0.2s ease;
+  min-height: 120px;
 }
 
 .comment-form textarea:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(255, 69, 0, 0.1);
+  box-shadow: 0 0 0 3px var(--primary-shadow);
+}
+
+.comment-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
 }
 
 .comments-list {
@@ -155,34 +249,48 @@
   gap: 1rem;
 }
 
-.comment-item {
-  padding: 1rem;
-  background: var(--surface-hover);
-  border-radius: 12px;
-  border: 1px solid var(--border-light);
-}
-
-.comment-author {
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.comment-body {
-  color: var(--text-primary);
-  font-size: 0.9375rem;
-  line-height: 1.5;
-  margin-bottom: 0.75rem;
-}
-
-.comment-actions {
+.empty-comments-placeholder {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 700;
+  text-align: center;
+  padding: 3rem 1rem;
   color: var(--text-secondary);
+}
+
+.empty-comments-placeholder svg {
+  /* Adjust icon color based on theme */
+  background: var(--surface-hover);
+  border-radius: 50%;
+  padding: 1rem;
+  box-sizing: content-box;
+}
+.empty-comments-placeholder h2 {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  margin: 1rem 0 0.5rem;
+}
+.empty-comments-placeholder p {
+  font-size: 0.875rem;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+
+.comment-item {
+  padding: 0; /* Remove padding */
+  background: transparent;
+  border: none;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.comment-voting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32px;
+  flex-shrink: 0;
 }
 
 .comment-vote {
@@ -201,13 +309,183 @@
   color: var(--text-primary);
 }
 
+.comment-content {
+  flex: 1;
+  border-left: 2px solid var(--border-light);
+  padding-left: 0.75rem;
+}
+
+.comment-author {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.comment-author a {
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  margin-right: 0.5rem;
+}
+.comment-author a:hover {
+  text-decoration: underline;
+}
+
+.comment-body {
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* --- New Community Sidebar --- */
+
+.community-sidebar-card {
+  padding: 1rem;
+}
+
+.community-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.community-sidebar-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.community-sidebar-name:hover {
+  text-decoration: underline;
+}
+
+.community-sidebar-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.community-sidebar-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.community-sidebar-stats > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-number {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.community-rules-card {
+  padding: 1rem;
+}
+
+.community-rules-card h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.community-rules-list {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.community-rules-list li {
+  line-height: 1.4;
+}
+
+
+/* --- Responsive --- */
+@media (max-width: 960px) {
+  .post-sidebar-column {
+    display: none; /* Hide right sidebar on tablets */
+  }
+  .post-content-column {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  .post-detail-page {
+    padding: 1rem 0;
+  }
+}
+
 @media (max-width: 768px) {
   .post-detail-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
-
   .post-detail-actions {
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
+  .post-content {
+    padding: 0.75rem;
+  }
+  .post-voting {
+    width: 36px;
+  }
+  .vote-btn {
+    padding: 0.375rem;
+  }
+}
+
+
+/* * --- Dark Theme Support --- 
+ * Uses variables from your Sidebar.css
+*/
+[data-theme="dark"] {
+  --surface: #1a1a1b;
+  --surface-hover: #272729;
+  --surface-active: #3a3a3c;
+  --border: #343536;
+  --border-light: #343536;
+  --text-primary: #d7dadc;
+  --text-secondary: #818384;
+  --text-tertiary: #565758;
+  --primary-shadow: rgba(255, 69, 0, 0.15);
+
+  .empty-comments-placeholder svg path:first-child {
+    fill: var(--surface-hover);
+  }
+  .empty-comments-placeholder svg path:not(:first-child) {
+    fill: var(--text-secondary);
+  }
+}
+
+/* Specific dark mode override for post media background */
+[data-theme="dark"] .post-detail-media {
+  background-color: #030303;
 }
