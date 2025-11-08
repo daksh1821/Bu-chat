@@ -11,7 +11,7 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { formatDistanceToNow } from 'date-fns'; // Import date-fns
+import { formatDistanceToNow } from 'date-fns';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { postService } from '../services/postService';
@@ -39,7 +39,7 @@ const PostDetail = () => {
   const [commentText, setCommentText] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // --- NEW: State for button functionality ---
+  // --- State for button functionality ---
   const [localScore, setLocalScore] = useState(0);
   const [userVote, setUserVote] = useState(0); // 0 = no vote, 1 = up, -1 = down
   const [isSaved, setIsSaved] = useState(false);
@@ -56,12 +56,10 @@ const PostDetail = () => {
         const post = postData.post || postData;
         setPost(post); 
         
-        // --- NEW: Set initial state from post data ---
-        // Assumes your API returns user-specific data like userVote and isSaved
+        // --- Set initial state from post data ---
         setLocalScore(post.score || 0);
         setUserVote(post.userVote || 0); 
         setIsSaved(post.isSaved || false);
-        // --- End New ---
         
         const commentData = await commentService.getPostComments(postId);
         setComments(commentData.comments || []);
@@ -85,17 +83,21 @@ const PostDetail = () => {
     }
     if (!commentText.trim()) return;
 
+    const commentBody = commentText;
+    setCommentText('');
+
     try {
-      await commentService.createComment(postId, {
-        body: commentText,
+      const newComment = await commentService.createComment(postId, {
+        body: commentBody,
         userId: user.userId || user.id, 
         username: user.username,
       });
-      setCommentText('');
-      fetchComments(); // Re-fetch comments to show the new one
+
+      setComments([newComment, ...comments]); 
       toast.success('Comment added!');
     } catch (error) {
       toast.error('Failed to add comment');
+      setCommentText(commentBody);
     }
   };
 
@@ -108,7 +110,6 @@ const PostDetail = () => {
     }
   };
 
-  // --- NEW: Handle Post Vote ---
   const handleVote = async (voteType) => {
     if (!user) {
       navigate('/login');
@@ -118,7 +119,6 @@ const PostDetail = () => {
     const currentVote = userVote;
     const newVote = currentVote === voteType ? 0 : voteType;
 
-    // Optimistic UI update
     let newScore = localScore;
     if (currentVote === 1) newScore--;
     if (currentVote === -1) newScore++;
@@ -129,17 +129,14 @@ const PostDetail = () => {
     setUserVote(newVote);
 
     try {
-      // API call
       await postService.votePost(postId, user.userId, newVote);
     } catch (error) {
-      // Revert on error
       toast.error('Vote failed');
       setLocalScore(localScore);
       setUserVote(currentVote);
     }
   };
 
-  // --- NEW: Handle Save/Bookmark ---
   const handleSave = async () => {
     if (!user) {
       navigate('/login');
@@ -151,7 +148,6 @@ const PostDetail = () => {
     toast.success(newState ? 'Post saved' : 'Post unsaved');
 
     try {
-      // API call
       await postService.savePost(postId, user.userId, newState);
     } catch (error) {
       toast.error('Failed to save post');
@@ -159,7 +155,6 @@ const PostDetail = () => {
     }
   };
 
-  // --- NEW: Handle Share ---
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -167,7 +162,6 @@ const PostDetail = () => {
         url: window.location.href,
       }).catch(console.error);
     } else {
-      // Fallback for desktop
       navigator.clipboard.writeText(window.location.href);
       toast.success('Link copied to clipboard');
     }
@@ -195,7 +189,6 @@ const PostDetail = () => {
         {/* --- Post Card Structure --- */}
         <Card className="post-detail-card">
           <div className="post-voting">
-            {/* --- UPDATED: Wired up vote buttons --- */}
             <button 
               className={`vote-btn upvote ${userVote === 1 ? 'active' : ''}`}
               onClick={() => handleVote(1)}
@@ -214,7 +207,6 @@ const PostDetail = () => {
             <div className="post-detail-header">
               <Link to={`/c/${post.community}`} className="post-community">c/{post.community}</Link>
               <span className="post-author">Posted by u/{post.username}</span>
-              {/* --- UPDATED: Added timestamp --- */}
               <span className="post-time">{timeAgo(post.createdAt)}</span>
             </div>
             <h1 className="post-detail-title">{post.title}</h1>
@@ -229,17 +221,14 @@ const PostDetail = () => {
                 <MessageCircle size={18} />
                 <span>{comments.length} Comments</span>
               </div>
-              {/* --- UPDATED: Wired up placeholder buttons --- */}
               <button className="action-btn" onClick={() => toast.info('Award feature coming soon!')}>
                 <Gift size={18} />
                 <span>Award</span>
               </button>
-              {/* --- UPDATED: Wired up share button --- */}
               <button className="action-btn" onClick={handleShare}>
                 <Share2 size={18} />
                 <span>Share</span>
               </button>
-              {/* --- UPDATED: Wired up save button --- */}
               <button className={`action-btn ${isSaved ? 'saved' : ''}`} onClick={handleSave}>
                 <Bookmark size={18} fill={isSaved ? 'currentColor' : 'none'} />
                 <span>{isSaved ? 'Saved' : 'Save'}</span>
@@ -253,7 +242,9 @@ const PostDetail = () => {
 
         {/* --- Comments Section --- */}
         <Card className="comments-section">
-          {user && (
+          {/* --- THIS IS THE FIX --- */}
+          {user ? (
+            // If user is LOGGED IN, show the form
             <form onSubmit={handleComment} className="comment-form">
               <p className="comment-as">Comment as <Link to={`/u/${user.username}`}>{user.username}</Link></p>
               <textarea
@@ -266,7 +257,17 @@ const PostDetail = () => {
                 <Button type="submit" disabled={!commentText.trim()}>Comment</Button>
               </div>
             </form>
+          ) : (
+            // If user is LOGGED OUT, show this prompt
+            <div className="comment-login-prompt">
+              <p>Log in or sign up to leave a comment</p>
+              <div>
+                <Button variant="ghost" onClick={() => navigate('/login')}>Log In</Button>
+                <Button variant="primary" onClick={() => navigate('/register')}>Sign Up</Button>
+              </div>
+            </div>
           )}
+          {/* --- END OF FIX --- */}
           
           <div className="comments-list">
             {comments.length === 0 ? (
@@ -279,7 +280,6 @@ const PostDetail = () => {
               comments.map((comment) => (
                 <div key={comment.commentId} className="comment-item">
                   <div className="comment-voting">
-                    {/* --- UPDATED: Wired up placeholder buttons --- */}
                     <button className="comment-vote" onClick={() => toast.info('Comment voting coming soon!')}><ArrowUp size={16} /></button>
                     <button className="comment-vote" onClick={() => toast.info('Comment voting coming soon!')}><ArrowDown size={16} /></button>
                   </div>
@@ -287,13 +287,11 @@ const PostDetail = () => {
                     <div className="comment-author">
                       <Link to={`/u/${comment.username}`}>u/{comment.username}</Link>
                       <span className="comment-time">
-                        {/* --- UPDATED: Added timestamp --- */}
                         {timeAgo(comment.createdAt)}
                       </span>
                     </div>
                     <div className="comment-body">{comment.body}</div>
                     <div className="comment-actions">
-                      {/* --- UPDATED: Wired up placeholder buttons --- */}
                       <button className="action-btn" onClick={() => toast.info('Reply feature coming soon!')}>
                         <MessageCircle size={16} />
                         <span>Reply</span>
@@ -333,7 +331,6 @@ const PostDetail = () => {
               <span className="stat-label">Online</span>
             </div>
           </div>
-          {/* --- UPDATED: Wired up placeholder button --- */}
           <Button 
             variant="primary" 
             className="full-width"
