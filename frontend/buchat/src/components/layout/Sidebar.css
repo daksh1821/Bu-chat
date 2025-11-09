@@ -42,7 +42,7 @@
   position: fixed;
   top: 56px;
   left: 0;
-  width: 260px;
+  width: 300px;
   height: calc(100vh - 56px);
   background: var(--surface);
   border-right: 1px solid var(--border-light);
@@ -57,7 +57,7 @@
 }
 
 .sidebar-content {
-  padding: 1.5rem 1rem;
+  padding: 0.5rem 1rem;
   display: flex;
   flex-direction: column;
   /* gap: 2rem; */ /* <-- Removed this gap to prevent large space */

@@ -125,9 +125,11 @@ const Home = () => {
             <Card className="create-post-card">
               <h3>Create Post</h3>
               <p>Share something with the community</p>
-              <Button fullWidth onClick={() => (window.location.href = '/create-post')}>
+              {/* --- THIS IS THE FIX --- */}
+              <Button fullWidth onClick={() => navigate('/create-post')}>
                 Create Post
               </Button>
+              {/* --- END OF FIX --- */}
             </Card>
           )}
 

@@ -12,6 +12,8 @@
   grid-template-columns: 1fr 320px;
   gap: 1.25rem;
   align-items: start;
+  /* Add transition for a smooth shift */
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .home-main {
@@ -151,5 +153,21 @@
 
   .home-sidebar {
     gap: 1rem;
+  }
+}
+
+/* --- THIS IS THE FIX --- */
+/* * This media query should match the breakpoint where your *left* sidebar
+ * becomes permanently visible (based on your Sidebar.css, this is 769px).
+*/
+@media (min-width: 769px) {
+  .home-container {
+    /* * Your main layout is pushing this container right (e.g., margin-left: 260px).
+     * This negative margin pulls it back by 130px (half a 260px sidebar)
+     * to create the "half-shift" overlap you wanted.
+     * We keep 'margin-right: auto' to maintain the centering behavior.
+    */
+    margin-left: 320px;
+    margin-right: auto;
   }
 }
