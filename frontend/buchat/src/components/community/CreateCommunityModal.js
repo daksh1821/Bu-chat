@@ -1,6 +1,4 @@
-// FILE: src/components/community/CommunityModal.js
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -17,15 +15,62 @@ import { toast } from 'react-toastify';
 import { communityService } from '../../services/communityService';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../common/Button';
-import './CreateCommunityModal.css'; // This CSS file is still the same
+import './CreateCommunityModal.css';
 
-// List of all topics from the screenshot
+// Expanded list of all topics
 const allTopics = [
+  // Original
   'Anime & Cosplay', 'Anime', 'Manga', 'Art', 'Performing Arts', 'Architecture', 
   'Design', 'Filmmaking', 'Digital Art', 'Photography', 'Business & Finance', 
   'Business', 'Economics', 'Business News & Discussion', 'Deals & Marketplace', 
   'Startup & Entrepreneurial', 'Real Estate', 'Stocks & Investing', 'Collecting & Other Hobbies', 
-  'Model Building', 'Collectibles', 'Other Hobbies', 'Tags'
+  'Model Building', 'Collectibles', 'Other Hobbies', 'Tags',
+  // Gaming
+  'Gaming', 'Action Games', 'Strategy Games', 'RPG', 'Indie Games', 'eSports', 
+  'PC Gaming', 'Console Gaming', 'PlayStation', 'Xbox', 'Nintendo', 'Mobile Gaming', 
+  'Board Games', 'Card Games', 'Dungeons & Dragons', 'Streamers', 'Twitch',
+  // Technology
+  'Technology', 'Programming', 'JavaScript', 'React', 'Python', 'Node.js', 
+  'Web Development', 'Mobile Development', 'AI & Machine Learning', 'Cybersecurity', 
+  'Gadgets', 'Smartphones', 'Apple', 'Android', 'Linux', 'PC Building', 'Crypto & Blockchain',
+  // Science
+  'Science', 'Physics', 'Chemistry', 'Biology', 'Mathematics', 'Space & Astronomy', 
+  'Environment', 'Psychology', 'Neuroscience', 'Robotics', 'Data Science',
+  // Lifestyle
+  'Lifestyle', 'Fashion & Beauty', 'Mens Fashion', 'Womens Fashion', 'Makeup', 
+  'Skincare', 'Health & Fitness', 'Fitness', 'Weight Loss', 'Nutrition', 'Yoga', 
+  'Meditation', 'Mental Health', 'Relationships', 'Parenting', 'DIY & Crafts', 
+  'Home Improvement', 'Gardening', 'Personal Finance',
+  // Food & Drink
+  'Food & Drink', 'Cooking', 'Baking', 'Recipes', 'Healthy Food', 'Vegan', 
+  'Vegetarian', 'Beer', 'Wine', 'Coffee', 'Tea', 'Restaurants',
+  // Travel
+  'Travel', 'Solo Travel', 'Backpacking', 'Digital Nomads', 'Travel Deals', 
+  'Europe', 'Asia', 'North America', 'South America', 'Africa', 'Australia',
+  // Sports
+  'Sports', 'Football (Soccer)', 'American Football', 'Basketball', 'Baseball', 
+  'Hockey', 'Tennis', 'Golf', 'Motorsports', 'Formula 1', 'NASCAR', 'MMA', 
+  'Pro Wrestling', 'Olympics', 'Fantasy Sports',
+  // Music
+  'Music', 'Pop', 'Rock', 'Hip-Hop', 'Electronic Music', 'Classical Music', 
+  'Jazz', 'Metal', 'Music Production', 'Guitar', 'Piano', 'DJs', 'Spotify',
+  // Movies & TV
+  'Movies & TV', 'Movies', 'TV Shows', 'Netflix', 'Disney+', 'Marvel', 'DC Comics', 
+  'Star Wars', 'Sci-Fi & Fantasy', 'Horror', 'Documentaries', 'Celebrities',
+  // Books & Writing
+  'Books & Writing', 'Books', 'Literature', 'Fantasy Books', 'Sci-Fi Books', 
+  'Writing', 'Poetry', 'Screenwriting',
+  // Hobbies
+  'Hobbies', '3D Printing', 'Lego', 'Woodworking', 'Knitting', 'Drawing', 'Painting',
+  'Cars', 'Motorcycles', 'Photography', 'Astrophotography', 'Aquariums',
+  // Culture & Society
+  'Culture & Society', 'History', 'Philosophy', 'Politics', 'World News', 
+  'Social Issues', 'Languages', 'Education', 'University',
+  // Regional
+  'India', 'United Kingdom', 'Canada', 'Germany', 'France', 'Japan', 'South Korea',
+  // Other
+  'Memes', 'Funny', 'Aww', 'Wholesome', 'Interesting', 'Nature', 'Pets', 
+  'Dogs', 'Cats', 'Birds', 'Ask', 'Explain Like I\'m 5'
 ];
 
 const modalVariants = {
@@ -43,10 +88,16 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
     communityType: 'Public',
     isMature: false,
     topics: [],
-    banner: null,
-    icon: null,
+    bannerPreview: null,
+    iconPreview: null,
+    bannerFile: null,
+    iconFile: null,
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double-clicks
+
+  const bannerInputRef = useRef(null);
+  const iconInputRef = useRef(null);
 
   const nextStep = () => setStep((s) => s + 1);
   const prevStep = () => setStep((s) => s - 1);
@@ -59,13 +110,47 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
     }));
   };
 
+  const handleFileChange = (event, fileType) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file (PNG, JPG, etc.)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({
+          ...prev,
+          [`${fileType}Preview`]: reader.result,
+          [`${fileType}File`]: file,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileRemove = (fileType) => {
+    setFormData(prev => ({
+      ...prev,
+      [`${fileType}Preview`]: null,
+      [`${fileType}File`]: null,
+    }));
+    if (fileType === 'icon' && iconInputRef.current) {
+      iconInputRef.current.value = null;
+    }
+    if (fileType === 'banner' && bannerInputRef.current) {
+      bannerInputRef.current.value = null;
+    }
+  };
+
+
   const toggleTopic = (topic) => {
     setFormData((prev) => {
       const newTopics = prev.topics.includes(topic)
         ? prev.topics.filter((t) => t !== topic)
         : [...prev.topics, topic];
       
-      // Enforce max 5 topics
       if (newTopics.length > 5) {
         toast.warn('You can select a maximum of 5 topics.');
         return prev;
@@ -83,18 +168,18 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
     
     if (!formData.name) {
       toast.error('Please enter a community name.');
-      setStep(1); // Go back to step 1
+      setStep(1);
       return;
     }
 
+    setIsSubmitting(true);
+    toast.success(`Creating community c/${formData.name}...`);
+
     try {
-      toast.success(`Creating community c/${formData.name}...`);
-      
-      // --- THIS IS THE FIX ---
-      // Added 'displayName' to the payload
+      // Step 1: Create the community with text data
       const payload = {
         name: formData.name,
-        displayName: formData.name, // Added this line
+        displayName: formData.name,
         description: formData.description,
         communityType: formData.communityType,
         isMature: formData.isMature,
@@ -102,31 +187,61 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
         userId: user.userId || user.id, 
         username: user.username,
       };
-      // --- END OF FIX ---
       
-      console.log('Sending payload to createCommunity:', payload);
-
-      // Call the service
+      console.log('Sending text payload:', payload);
+      // Assuming your service returns the new community object with its ID
       const newCommunity = await communityService.createCommunity(payload);
+      
+      // --- THIS IS THE NEW PART ---
+      // Step 2: If files were selected, upload them now.
+      // TODO: You must implement communityService.uploadCommunityImage
+      // This function needs to take the community ID/name and the file
+      // and send it to your backend as 'form-data'.
+
+      if (formData.iconFile) {
+        try {
+          toast.info('Uploading icon...');
+          // const iconData = new FormData();
+          // iconData.append('file', formData.iconFile);
+          // await communityService.uploadCommunityImage(newCommunity.id, 'icon', iconData);
+          console.log('Icon upload feature needs backend implementation.');
+        } catch (uploadError) {
+          console.error('Icon upload failed:', uploadError);
+          toast.error('Community created, but icon upload failed.');
+        }
+      }
+      
+      if (formData.bannerFile) {
+         try {
+          toast.info('Uploading banner...');
+          // const bannerData = new FormData();
+          // bannerData.append('file', formData.bannerFile);
+          // await communityService.uploadCommunityImage(newCommunity.id, 'banner', bannerData);
+          console.log('Banner upload feature needs backend implementation.');
+        } catch (uploadError) {
+          console.error('Banner upload failed:', uploadError);
+          toast.error('Community created, but banner upload failed.');
+        }
+      }
+      // --- END OF NEW PART ---
       
       if (onCommunityCreated) {
         onCommunityCreated(formData.name);
       }
       resetAndClose();
+
     } catch (error) {
       console.error("Failed to create community:", error.response || error);
-      
-      if (error.response && error.response.data && error.response.data.message) {
-        toast.error(error.response.data.message);
-      } else if (error.response && error.response.data) {
-        // Handle cases where the error message might be in a different format
-        // This will grab "name and displayName required"
+      if (error.response && error.response.data) {
         toast.error(error.response.data.error || error.response.data.message || 'Failed to create community');
       } else {
         toast.error(error.message || 'Failed to create community');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  // --- END OF UPDATED HANDLER ---
 
   const resetAndClose = () => {
     setFormData({
@@ -135,8 +250,10 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
       communityType: 'Public',
       isMature: false,
       topics: [],
-      banner: null,
-      icon: null,
+      bannerPreview: null,
+      iconPreview: null,
+      bannerFile: null,
+      iconFile: null,
     });
     setStep(1);
     onClose();
@@ -148,7 +265,6 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
 
   const renderStep = () => {
     switch (step) {
-      // Step 1: Tell us about your community
       case 1:
         return (
           <>
@@ -184,25 +300,73 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
             </div>
           </>
         );
-      // Step 2: Style your community
       case 2:
         return (
           <>
             <h2>Style your community</h2>
             <p>Choose an icon and banner to draw attention and help establish your community's culture! You can update this at any time.</p>
+            
+            {/* Hidden file inputs */}
+            <input 
+              type="file" 
+              ref={bannerInputRef} 
+              onChange={(e) => handleFileChange(e, 'banner')} 
+              style={{ display: 'none' }} 
+              accept="image/*"
+            />
+            <input 
+              type="file" 
+              ref={iconInputRef} 
+              onChange={(e) => handleFileChange(e, 'icon')} 
+              style={{ display: 'none' }} 
+              accept="image/*"
+            />
+
             <div className="style-upload">
-              <label>Banner</label>
-              <Button icon={<Image size={16} />} variant="ghost" className="upload-btn">Add</Button>
+              <label>Banner {formData.bannerFile && <span className="file-name">({formData.bannerFile.name})</span>}</label>
+              <div>
+                {formData.bannerPreview && (
+                  <Button variant="ghost" className="upload-btn remove" onClick={() => handleFileRemove('banner')}>Remove</Button>
+                )}
+                <Button 
+                  icon={<Image size={16} />} 
+                  variant="ghost" 
+                  className="upload-btn"
+                  onClick={() => bannerInputRef.current.click()}
+                >
+                  {formData.bannerPreview ? 'Change' : 'Add'}
+                </Button>
+              </div>
             </div>
             <div className="style-upload">
-              <label>Icon</label>
-              <Button icon={<Image size={16} />} variant="ghost" className="upload-btn">Add</Button>
+              <label>Icon {formData.iconFile && <span className="file-name">({formData.iconFile.name})</span>}</label>
+              <div>
+                {formData.iconPreview && (
+                  <Button variant="ghost" className="upload-btn remove" onClick={() => handleFileRemove('icon')}>Remove</Button>
+                )}
+                <Button 
+                  icon={<Image size={16} />} 
+                  variant="ghost" 
+                  className="upload-btn"
+                  onClick={() => iconInputRef.current.click()}
+                >
+                  {formData.iconPreview ? 'Change' : 'Add'}
+                </Button>
+              </div>
             </div>
+
             <div className="style-preview">
-              <div className="preview-banner"></div>
+              <div 
+                className="preview-banner" 
+                style={{ backgroundImage: formData.bannerPreview ? `url(${formData.bannerPreview})` : 'none' }}
+              ></div>
               <div className="preview-icon-row">
                 <div className="preview-icon">
-                  <Users size={24} />
+                  {formData.iconPreview ? (
+                    <img src={formData.iconPreview} alt="Icon preview" />
+                  ) : (
+                    <Users size={24} />
+                  )}
                 </div>
                 <div className="preview-text">
                   <h4>c/{formData.name || 'CommunityName'}</h4>
@@ -213,7 +377,6 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
             </div>
           </>
         );
-      // Step 3: Add topics
       case 3:
         return (
           <>
@@ -244,7 +407,6 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
             <p className="topics-count">Topics {formData.topics.length}/5</p>
           </>
         );
-      // Step 4: What kind of community is this?
       case 4:
         return (
           <>
@@ -353,8 +515,8 @@ const CommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
                   Next
                 </Button>
               ) : (
-                <Button variant="primary" onClick={handleSubmit}>
-                  Create Community
+                <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? 'Creating...' : 'Create Community'}
                 </Button>
               )}
             </div>

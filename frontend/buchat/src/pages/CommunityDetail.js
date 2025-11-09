@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-// --- THIS IS THE FIX ---
 import { motion, AnimatePresence } from 'framer-motion'; 
-// --- END OF FIX ---
 import { 
   Users, 
   Plus, 
@@ -39,14 +37,12 @@ const CommunityDetail = () => {
   const [isMember, setIsMember] = useState(false);
   const [isBuildCardOpen, setIsBuildCardOpen] = useState(true);
 
-  // Check if the current user is the creator
   const isCreator = user && community && (user.userId === community.creatorId || user.id === community.creatorId);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch community and posts in parallel
         const [communityData, postData] = await Promise.all([
           communityService.getCommunity(communityName),
           postService.getCommunityPosts(communityName)
@@ -55,8 +51,6 @@ const CommunityDetail = () => {
         if (communityData) {
           const fetchedCommunity = communityData.community || communityData;
           setCommunity(fetchedCommunity);
-          // Assuming the community data includes whether the user is a member
-          // You might need to add a service to check membership
           setIsMember(fetchedCommunity.isMember || false); 
         } else {
           throw new Error('Community not found');
@@ -85,11 +79,10 @@ const CommunityDetail = () => {
     const action = isMember ? 'leave' : 'join';
     const originalState = isMember;
     
-    // Optimistic update
     setIsMember(!originalState);
     setCommunity(prev => ({
       ...prev,
-      memberCount: prev.memberCount + (originalState ? -1 : 1)
+      memberCount: (prev.memberCount || 0) + (originalState ? -1 : 1)
     }));
     
     try {
@@ -100,17 +93,15 @@ const CommunityDetail = () => {
         await communityService.joinCommunity(communityName, user.userId);
         toast.success(`Joined c/${communityName}!`);
       }
-      // Re-fetch community data to get accurate member count
       const data = await communityService.getCommunity(communityName);
       setCommunity(data.community || data);
       setIsMember(data.isMember || !originalState);
 
     } catch (error) {
-      // Revert on failure
       setIsMember(originalState);
       setCommunity(prev => ({
         ...prev,
-        memberCount: prev.memberCount // Revert count
+        memberCount: prev.memberCount
       }));
       toast.error('Action failed');
     }
@@ -121,7 +112,6 @@ const CommunityDetail = () => {
       navigate('/login');
       return;
     }
-    // Navigate to create post, pre-filling the community
     navigate('/create-post', { state: { communityName: community.name } });
   };
 
@@ -141,14 +131,21 @@ const CommunityDetail = () => {
 
   return (
     <div className="community-detail-page">
-      {/* --- New Header --- */}
-      <div className="community-header-banner">
-        {/* Banner image would go here */}
+      {/* --- Header --- */}
+      <div 
+        className="community-header-banner"
+        style={{ backgroundImage: community.bannerFile ? `url(${community.bannerFile})` : 'none' }}
+      >
+        {/* Banner image */}
       </div>
       <div className="community-header-main">
         <div className="community-header-content">
           <div className="community-header-icon">
-            <Users size={32} />
+            {community.iconUrl ? (
+              <img src={community.iconUrl} alt={`${community.name} icon`} />
+            ) : (
+              <Users size={32} />
+            )}
           </div>
           <div className="community-header-info">
             <h1>{community.name} {isCreator && <CheckCircle2 size={24} className="verified-tick" />}</h1>
@@ -176,7 +173,11 @@ const CommunityDetail = () => {
           {isCreator && (
             <div className="community-create-post-bar">
               <div className="create-post-avatar">
-                <Users size={24} />
+                {user.avatar ? (
+                  <img src={user.avatar} alt="User avatar" className="user-avatar-icon" />
+                ) : (
+                  <Users size={24} />
+                )}
               </div>
               <input
                 type="text"
@@ -260,11 +261,28 @@ const CommunityDetail = () => {
             </div>
             <div className="sidebar-card-content">
               <div className="about-community-icon">
-                <Users size={32} />
+                {community.iconUrl ? (
+                  <img src={community.iconUrl} alt={`${community.name} icon`} />
+                ) : (
+                  <Users size={32} />
+                )}
               </div>
               <h3>c/{community.name}</h3>
               <p>{community.description || 'No description set.'}</p>
-              <span className="community-topic-tag">{community.topics || 'tech'}</span>
+              
+              {/* --- THIS IS THE FIX --- */}
+              <div className="community-topic-tags-container">
+                {community.topics && community.topics.length > 0 ? (
+                  community.topics.split(',').map((topic) => (
+                    <span key={topic} className="community-topic-tag">
+                      {topic}
+                    </span>
+                  ))
+                ) : (
+                  <span className="community-topic-tag">No topics set</span>
+                )}
+              </div>
+              {/* --- END OF FIX --- */}
               
               <div className="about-community-stats">
                 <div className="stat-item">

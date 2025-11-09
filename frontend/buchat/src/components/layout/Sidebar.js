@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
@@ -18,22 +18,10 @@ import {
   Briefcase, // For Careers
   FileText, // For Blog/Press
 } from 'lucide-react';
-// import { useAuth } from '../../contexts/AuthContext'; // Removed AuthContext
+import { useAuth } from '../../contexts/AuthContext';
+import { communityService } from '../../services/communityService';
+import CommunityModal from '../community/CreateCommunityModal'; // Import the modal
 import './Sidebar.css';
-
-// A mock list to show how joined communities will look.
-// You will replace this with real data.
-// const mockJoinedCommunities = [
-//   { name: 'r/announcements', path: '/r/announcements', icon: 'https://placehold.co/24x24/FF4500/FFF?text=A' },
-//   { name: 'r/aww', path: '/r/aww', icon: 'https://placehold.co/24x24/54A0FF/FFF?text=A' },
-//   { name: 'r/CarsIndia', path: '/r/CarsIndia', icon: 'https://placehold.co/24x24/00D2D3/FFF?text=C' },
-// ];
-
-// Mock list for "Recent"
-// const mockRecentCommunities = [
-//   { name: 'r/technology', path: '/r/technology', icon: 'https://placehold.co/24x24/2196F3/FFF?text=T' },
-//   { name: 'r/NaughtyIndians', path: '/r/NaughtyIndians', icon: 'https://placehold.co/24x24/E91E63/FFF?text=N' },
-// ];
 
 // List for "Resources"
 const resourcesNavItems = [
@@ -47,10 +35,46 @@ const resourcesNavItems = [
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
-  // const { isAuthenticated, user } = useAuth(); // Removed AuthContext
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate(); // Initialize navigate
   const [isRecentOpen, setIsRecentOpen] = useState(true);
   const [isCommunitiesOpen, setIsCommunitiesOpen] = useState(true);
   const [isResourcesOpen, setIsResourcesOpen] = useState(true);
+
+  const [joinedCommunities, setJoinedCommunities] = useState([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
+
+  // --- NEW: Wrapped fetchJoined in useCallback ---
+  // This allows it to be called from useEffect AND handleCommunityCreated
+  const fetchJoined = useCallback(async () => {
+    if (isAuthenticated && user) {
+      setLoadingCommunities(true);
+      try {
+        const response = await communityService.getJoinedCommunities(user.userId || user.id);
+        setJoinedCommunities(response.communities || []);
+      } catch (error) {
+        console.error('Failed to fetch joined communities:', error);
+        setJoinedCommunities([]);
+      } finally {
+        setLoadingCommunities(false);
+      }
+    } else {
+      setJoinedCommunities([]);
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    fetchJoined();
+  }, [fetchJoined]); // useEffect now depends on the stable useCallback function
+
+  // --- NEW: Handler for when the modal successfully creates a community ---
+  const handleCommunityCreated = (communityName) => {
+    setIsModalOpen(false); // Close the modal
+    fetchJoined(); // Re-fetch the list of communities
+    onClose(); // Close the sidebar (for mobile)
+    navigate(`/c/${communityName}`); // Navigate to the new community page
+  };
 
   // Main navigation items from the image
   const mainNavItems = [
@@ -62,11 +86,9 @@ const Sidebar = ({ isOpen, onClose }) => {
   ];
 
   const isActive = (path) => {
-    // Make 'Home' active only on the exact path
     if (path === '/') {
       return location.pathname === '/';
     }
-    // For other paths, check if the pathname starts with it
     return location.pathname.startsWith(path);
   };
 
@@ -114,7 +136,6 @@ const Sidebar = ({ isOpen, onClose }) => {
               <span>Recent</span>
               <ChevronDown size={20} className="chevron-icon" />
             </button>
-
             <AnimatePresence>
               {isRecentOpen && (
                 <motion.div
@@ -132,7 +153,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           <hr className="sidebar-divider" />
 
-          {/* --- COMMUNITIES Section --- */}
+          {/* --- COMMUNITIES Section (UPDATED) --- */}
           <div className="sidebar-section">
             <button
               className={`sidebar-section-header ${isCommunitiesOpen ? 'open' : ''}`}
@@ -151,7 +172,60 @@ const Sidebar = ({ isOpen, onClose }) => {
                   animate="visible"
                   exit="hidden"
                 >
-                  {/* Items removed as requested */}
+                  {/* --- NEW DYNAMIC CONTENT --- */}
+                  {isAuthenticated ? (
+                    <>
+                      {/* --- UPDATED: This is now a button to open the modal --- */}
+                      <button 
+                        className="community-item" 
+                        onClick={() => {
+                          setIsModalOpen(true);
+                          onClose(); // Close sidebar if on mobile
+                        }}
+                      >
+                        <Plus size={24} className="community-icon-placeholder" />
+                        <span>Create Community</span>
+                      </button>
+                      
+                      {loadingCommunities && (
+                        <div className="community-item-loading">
+                          <span>Loading communities...</span>
+                        </div>
+                      )}
+
+                      {!loadingCommunities && joinedCommunities.length > 0 && (
+                        joinedCommunities.map((community) => (
+                          <Link
+                            key={community.communityId} // Use a unique ID
+                            to={`/c/${community.name}`}
+                            className={`community-item ${isActive(`/c/${community.name}`) ? 'active' : ''}`}
+                            onClick={onClose}
+                          >
+                            {community.iconUrl ? (
+                              <img src={community.iconUrl} alt={`${community.name} icon`} className="community-icon" />
+                            ) : (
+                              // Fallback to first letter
+                              <div className="community-icon-placeholder letter">
+                                {community.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span>c/{community.name}</span>
+                          </Link>
+                        ))
+                      )}
+
+                      {!loadingCommunities && joinedCommunities.length === 0 && (
+                         <div className="community-item-loading">
+                          <span>No communities joined.</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="community-item-loading">
+                      <span>Log in to see your communities.</span>
+                    </div>
+                  )}
+                  {/* --- END NEW DYNAMIC CONTENT --- */}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -196,6 +270,13 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         </div>
       </motion.aside>
+
+      {/* --- NEW: Render the modal --- */}
+      <CommunityModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCommunityCreated={handleCommunityCreated}
+      />
     </>
   );
 };
